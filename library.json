@@ -1,0 +1,21 @@
+{
+    "name": "List",
+    "version": "1.0.0",
+    "description": "Handle list of element in simple way.",
+    "keywords": "list, linkedList, Data, Structure",
+    "authors": [
+        {
+            "name": "Moon Man",
+            "email": "seagame.std@gmail.com"
+        }
+    ],
+    "frameworks": "arduino",
+    "platforms": [
+        "atmelavr",
+        "espressif32",
+        "espressif8266"
+    ],
+    "repository": {
+        "type": "git"
+    }
+}
