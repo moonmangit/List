@@ -1,11 +1,11 @@
 {
     "name": "List",
-    "version": "1.0.0",
-    "description": "Handle list of element in simple way.",
-    "keywords": "list, linkedList, Data, Structure",
+    "version": "1.0.1",
+    "description": "simple linked list and helper methods",
+    "keywords": "List, LinkedList, Data, Pattern",
     "authors": [
         {
-            "name": "Moon Man",
+            "name": "MoonMan",
             "email": "seagame.std@gmail.com"
         }
     ],
@@ -16,6 +16,7 @@
         "espressif8266"
     ],
     "repository": {
-        "type": "git"
+        "type": "git",
+        "url": "https://github.com/moonmangit/List"
     }
 }

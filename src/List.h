@@ -1,266 +1,365 @@
-#ifndef __LIST_H__
-#define __LIST_H__
-
-typedef unsigned int index_t;
-typedef unsigned int size_t;
+#ifndef __SIMPLE_LIST_H__
+#define __SIMPLE_LIST_H__
 
 template <typename T>
-struct ListNode
+struct listnode
 {
   T *data;
-  ListNode<T> *next;
+  listnode<T> *next;
 };
 
 template <typename T>
-class List
+class list
 {
-private:
-  // data
-  size_t size;
-  ListNode<T> *head, *tail;
-  // helper methods
-  void free(ListNode<T> *node)
-  {
-    Serial.println("deleted!");
-    delete node->data;
-    delete node;
-  }
-
 public:
-  List()
+  // insertion
+  /**
+   * @brief "back insertion" : insert data attached node to last position.
+   *
+   * @param data address of data needs to be attached.
+   * @return T* loopback address of data
+   */
+  T *insertBack(T *data)
   {
-    size = 0;
-    head = nullptr;
-    tail = nullptr;
-  }
-  ~List() {}
-  // basic methods
-  ListNode<T> *getNode(index_t index)
-  {
-    index %= size;
-    if (index > size - 1)
+    listnode<T> *node = new listnode<T>({data, nullptr});
+    if (listsize == 0)
     {
-      return nullptr;
+      firstInsert(node);
     }
+    else
+    {
+      tail->next = node;
+      tail = node;
+      listsize++;
+    }
+    return data;
+  }
+  /**
+   * @brief "front insertion" : insert data attached node to first position.
+   *
+   * @param data address of data needs to be attached.
+   * @return T* loopback address of data
+   */
+  T *insertFront(T *data)
+  {
+    listnode<T> *node = new listnode<T>({data, nullptr});
+    if (listsize == 0)
+    {
+      firstInsert(node);
+    }
+    else
+    {
+      node->next = head;
+      head = node;
+      listsize++;
+    }
+    return data;
+  }
+  /**
+   * @brief "specific position insertion" : insert data attached node to specific position.
+   *
+   * @param data address of data needs to be attached.
+   * @param index specific position, start at 0.
+   * @return T* loopback address of data.
+   */
+  T *insertAt(T *data, unsigned int index)
+  {
+    listnode<T> *node = new listnode<T>({data, nullptr});
+    if (listsize == 0)
+    {
+      firstInsert(node);
+    }
+    else
+    {
+      index = indexCorrector(index);
+      if (index == 0)
+        insertFront(data);
+      else if (index == listsize)
+        insertBack(data);
+      else
+      {
+        listnode<T> *bt = getNodeAddr(index - 1);
+        listnode<T> *t = bt->next;
+        node->next = t;
+        bt->next = node;
+        listsize++;
+      }
+    }
+    return data;
+  }
+#define arrsize(arr) sizeof(arr) / sizeof(arr[0])
+  /**
+   * @brief "load from array" : insert new copied created data from array to list.
+   *
+   * @param arr prototype array.
+   * @param arrSize array size.
+   * @return T* loopback array address.
+   */
+  T *fromArray(T arr[], unsigned int arrSize)
+  {
+    for (unsigned int i = 0; i < arrSize; i++)
+    {
+      insertBack(new T(arr[i]));
+    }
+    return arr;
+  }
 
-    ListNode<T> *target = head;
-    for (size_t i = 0; i < index; i++)
+  // get
+  /**
+   * @brief "get node adress" : get node address at specific position.
+   *
+   * @param index position, start at 0.
+   * @return listnode<T>* address of node.
+   */
+  listnode<T> *getNodeAddr(unsigned int index)
+  {
+    index = indexCorrector(index);
+    listnode<T> *target = head;
+    for (unsigned int i = 0; i < index; i++)
     {
       target = target->next;
     }
     return target;
   }
-
-  T *insert(T *data, index_t index = 0)
+  /**
+   * @brief "get node" : get node or reference of node at specific position.
+   *
+   * @param index position, start at 0.
+   * @return listnode<T>& copy(no-&) or reference(&) of node.
+   */
+  listnode<T> &getNode(unsigned int index)
   {
-    ListNode<T> *newNode = new ListNode<T>({data, nullptr});
-    if (size == 0)
-    { // empty insert
-      head = newNode;
-      tail = newNode;
-      size = 1;
-    }
-    else
-    {
-      index %= size;
-      if (index == 0)
-      { // insert at head
-        newNode->next = head;
-        head = newNode;
-      }
-      else if (index == size - 1)
-      { // insert at tail
-        tail->next = newNode;
-        tail = newNode;
-      }
-      else
-      {
-        ListNode<T> *befTarget = getNode(index - 1);
-        newNode->next = befTarget->next;
-        befTarget->next = newNode;
-      }
-      size++;
-    }
-    return data;
+    return *getNodeAddr(index);
+  }
+  /**
+   * @brief "get data": get copy or reference of data at specific position.
+   *
+   * @param index position, start at 0.
+   * @return T& copy(no-&) or reference(&) of data.
+   */
+  T &get(unsigned int index)
+  {
+    return *getNodeAddr(index)->data;
+  }
+  /**
+   * @brief "get data": get copy or reference of data at specific position.
+   *
+   * @param index position, start at 0.
+   * @return T& copy(no-&) or reference(&) of data.
+   */
+  T &operator[](unsigned int index)
+  {
+    return get(index);
   }
 
-  T *insertHead(T *data)
+  // remove
+  /**
+   * @brief "remove node and data": remove node and data(if necessary) from list.
+   *
+   * @param index position, start at 0.
+   * @param freeData true: free data, false: free only node.
+   */
+  void remove(unsigned int index, bool freeData = true)
   {
-    ListNode<T> *newNode = new ListNode<T>({data, nullptr});
-    newNode->next = head;
-    head = newNode;
-    if (size == 0)
-    {
-      tail = head;
-    }
-    size++;
-    return data;
-  }
-
-  T *insertBack(T *data)
-  {
-    ListNode<T> *newNode = new ListNode<T>({data, nullptr});
-    tail->next = newNode;
-    tail = newNode;
-    if (size == 0)
-    {
-      head = tail;
-    }
-    size++;
-    return data;
-  }
-
-  T &get(index_t index)
-  {
-    return *getNode(index)->data;
-  }
-
-  void remove(index_t index, bool freeSpace = true)
-  {
-    index %= size;
-    if (size == 0 || index > size - 1)
-    {
+    if (listsize == 0)
       return;
-    }
-    ListNode<T> *target = head;
+    index = indexCorrector(index);
+    listnode<T> *target;
     if (index == 0)
-    { // remove head
+    {
       target = head;
       head = head->next;
     }
-    else if (index == size - 1)
-    { // remove tail
-      target = tail;
-      ListNode<T> *befTail = getNode(index - 1);
-      befTail->next = tail->next;
-      tail = befTail;
+    else if (index == listsize - 1)
+    {
+      listnode<T> *bt = getNodeAddr(index - 1);
+      target = bt->next;
+      bt->next = nullptr;
+      tail = bt;
     }
     else
     {
-      ListNode<T> *befTarget = getNode(index - 1);
-      target = befTarget->next;
-      befTarget->next = target->next;
+      listnode<T> *bt = getNodeAddr(index - 1);
+      target = bt->next;
+      bt->next = target->next;
     }
-    if (freeSpace)
-      free(target);
-    size--;
+    freeup(target, freeData);
+    listsize--;
   }
-
-  bool isEmpty()
+  /**
+   * @brief "clear list nodes": remove all node and data(if necessary) in list.
+   *
+   * @param freeData  true: free data, false: remove only node.
+   */
+  void clearList(bool freeData)
   {
-    return (size == 0);
-  }
-
-  size_t getSize()
-  {
-    return size;
-  }
-
-  void clear(bool freeSpace = true)
-  {
-    ListNode<T> *tmp = head;
-    ListNode<T> *target;
-    for (size_t i = 0; i < size; i++)
+    listnode<T> *target;
+    for (unsigned int i = 0; i < listsize; i++)
     {
-      target = tmp;
-      tmp = tmp->next;
-      if (freeSpace)
-        free(target);
+      target = head;
+      freeup(target, freeData);
+      head = head->next;
     }
-    size = 0;
+    head = nullptr;
+    tail = nullptr;
+    listsize = 0;
   }
 
-  T *toDynamicArray()
+// helper
+#define findexpr(type, target, itemName1, itemName2) target, [](type & itemName1, type & itemName2) -> bool
+  /**
+   * @brief "find index" : find index that equal to target following desire check algorithm.
+   *
+   * @param target thing to find.
+   * @param checkequal check algorithm of two items.
+   * @return int index of target, -1 if not found.
+   */
+  int find(T target, bool checkequal(T &a, T &b))
   {
-    T *arr = new T[size];
-    ListNode<T> *tmp = head;
-    for (size_t i = 0; i < size; i++)
+    listnode<T> *tmp = head;
+    for (unsigned int i = 0; i < listsize; i++)
     {
-      arr[i] = *tmp->data;
-      tmp = tmp->next;
-    }
-
-    return arr;
-  }
-
-  void toStaticArray(T arr[])
-  {
-    ListNode<T> *tmp = head;
-    for (size_t i = 0; i < size; i++)
-    {
-      arr[i] = *tmp->data;
-      tmp = tmp->next;
-    }
-  }
-
-  // advance methods
-#define sortfn(type, itemName1, itemName2) [](type & itemName1, type & itemName2) -> int
-#define morethan 1
-#define lessthan -1
-#define equal 0
-  void sort(int (*comparefn)(T &a, T &b), bool ascending = true)
-  {
-    List<T> newList;
-
-    int decisionRule = (ascending) ? morethan : lessthan;
-    ListNode<T> *beftmp, *tmp, *cand, *befcand;
-    for (size_t i = 0; i < size; i++)
-    {
-      beftmp = nullptr;
-      cand = head;
-      tmp = head;
-      while (tmp != nullptr)
-      {
-        if (comparefn(*cand->data, *tmp->data) == decisionRule)
-        {
-          cand = tmp;
-          befcand = beftmp;
-        }
-        beftmp = tmp;
-        tmp = tmp->next;
-      }
-      befcand->next = cand->next;
-      // insert to new list
-      newList.insertBack(cand->data);
-      delete cand;
-    }
-    head = newList.getNode(0);
-    tail = newList.getNode(newList.getSize());
-    size = newList.getSize();
-    // free newList
-    newList.clear();
-  }
-
-#define eachfn(type, itemName, indexName) [](type & itemName, index_t indexName)
-  void each(void (*apply)(T &, index_t index))
-  {
-    ListNode<T> *tmp = head;
-    for (size_t i = 0; i < size; i++)
-    {
-      apply(*tmp->data, i);
-      tmp = tmp->next;
-    }
-  }
-
-#define findfn(type, itemName1, itemName2) [](type & itemName1, type & itemName2) -> bool
-  int find(T a, bool (*isEqual)(T &a, T &b))
-  {
-    ListNode<T> *tmp = head;
-    for (size_t i = 0; i < size; i++)
-    {
-      if (isEqual(a, *tmp->data))
+      if (checkequal(target, *tmp->data))
         return i;
       tmp = tmp->next;
     }
     return -1;
   }
-
-  size_t count();
-
-  // operator
-  T &operator[](index_t index)
+#define sortexpr(type, itemName1, itemName2) [](type & itemName1, type & itemName2) -> int
+  /**
+   * @brief "sort list" : sort all nodes following desire algorithm.
+   *
+   * @param compare compare algorithm of two items.
+   */
+  void sort(int (*compare)(T &a, T &b))
   {
-    return get(index);
+    list<T> newlist;
+    listnode<T> *tmp, *btmp, *cand;
+    unsigned int candIndex, tmpIndex;
+    unsigned int len = listsize;
+    for (unsigned int i = 0; i < len; i++)
+    {
+      btmp = head;
+      cand = head;
+      candIndex = 0;
+      tmp = btmp->next;
+      tmpIndex = 1;
+      while (tmp != nullptr)
+      {
+        if (compare(*cand->data, *tmp->data) == 1)
+        {
+          cand = tmp;
+          candIndex = tmpIndex;
+        }
+        btmp = tmp;
+        tmp = tmp->next;
+        tmpIndex++;
+      }
+      newlist.insertBack(cand->data);
+      remove(candIndex, false);
+    }
+    head = newlist.getNodeAddr(0);
+    tail = newlist.getNodeAddr(listsize - 1);
+    listsize = newlist.size();
+  }
+#define eachexpr(type, itemName, indexName) [](type & itemName, unsigned int indexName)
+  /**
+   * @brief "for each" : apply desire algorithm to every nodes in list.
+   *
+   * @param apply apply algorithm.
+   */
+  void each(void (*apply)(T &a, unsigned int index))
+  {
+    listnode<T> *tmp = head;
+    for (unsigned int i = 0; i < listsize; i++)
+    {
+      apply(*tmp->data, i);
+      tmp = tmp->next;
+    }
+  }
+  /**
+   * @brief "export to static array" : copy to pre-create static array.
+   *
+   * @param arr pre-create static array.
+   */
+  void toStaticArray(T arr[])
+  {
+    listnode<T> *tmp = head;
+    for (unsigned int i = 0; i < listsize; i++)
+    {
+      arr[i] = *tmp->data;
+      tmp = tmp->next;
+    }
+  }
+  /**
+   * @brief "export to dynamic array" : create dynamic(heap) array from list.
+   *
+   * @return T* dynamic array, !!!need delete[] after use ex: delete[] arr.
+   */
+  T *toDynamicArray()
+  {
+    int *arr = new int[listsize];
+    listnode<T> *tmp = head;
+    for (unsigned int i = 0; i < listsize; i++)
+    {
+      arr[i] = *tmp->data;
+      tmp = tmp->next;
+    }
+    return arr;
+  }
+  /**
+   * @brief "size of list" : return size of list.
+   *
+   * @return unsigned int size of list.
+   */
+  unsigned int size()
+  {
+    return listsize;
+  }
+
+private:
+  T *firstInsert(listnode<T> *node)
+  {
+    head = node;
+    tail = node;
+    listsize = 1;
+    return node->data;
+  }
+  unsigned int indexCorrector(unsigned int index)
+  {
+    return (index > listsize - 1) ? listsize - 1 : index;
+  }
+  void freeup(listnode<T> *node, bool freeData)
+  {
+    if (freeData)
+      delete node->data;
+    delete node;
+  }
+
+private:
+  unsigned int listsize;
+  listnode<T> *head, *tail;
+  bool destroyDataWhenOutOfScope;
+
+public:
+  list(T arr[], unsigned arrSize, bool destroyDataWhenOutOfScope = true)
+  {
+    listsize = 0;
+    head = nullptr;
+    tail = nullptr;
+    this->destroyDataWhenOutOfScope = destroyDataWhenOutOfScope;
+    fromArray(arr, arrSize);
+  }
+  list(bool destroyDataWhenOutOfScope = true)
+  {
+    listsize = 0;
+    head = nullptr;
+    tail = nullptr;
+    this->destroyDataWhenOutOfScope = destroyDataWhenOutOfScope;
+  }
+  ~list()
+  {
+    clearList(destroyDataWhenOutOfScope);
   }
 };
 
