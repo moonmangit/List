@@ -234,6 +234,7 @@ public:
   void sort(int (*compare)(T &a, T &b))
   {
     list<T> newlist;
+    newlist.setEnd(false, false);
     listnode<T> *tmp, *btmp, *cand;
     unsigned int candIndex, tmpIndex;
     unsigned int len = listsize;
@@ -246,7 +247,7 @@ public:
       tmpIndex = 1;
       while (tmp != nullptr)
       {
-        if (compare(*cand->data, *tmp->data) == 1)
+        if (compare(*cand->data, *tmp->data) > 0)
         {
           cand = tmp;
           candIndex = tmpIndex;
@@ -316,6 +317,11 @@ public:
   {
     return listsize;
   }
+  void setEnd(bool destroyNode, bool destroyData)
+  {
+    this->destroyNode = destroyNode;
+    this->destroyData = destroyData;
+  }
 
 private:
   T *firstInsert(listnode<T> *node)
@@ -339,27 +345,28 @@ private:
 private:
   unsigned int listsize;
   listnode<T> *head, *tail;
-  bool destroyDataWhenOutOfScope;
+  // out of scope procedure
+  bool destroyNode = true;
+  bool destroyData = true;
 
 public:
-  list(T arr[], unsigned arrSize, bool destroyDataWhenOutOfScope = true)
+  list(T arr[], unsigned arrSize)
   {
     listsize = 0;
     head = nullptr;
     tail = nullptr;
-    this->destroyDataWhenOutOfScope = destroyDataWhenOutOfScope;
     fromArray(arr, arrSize);
   }
-  list(bool destroyDataWhenOutOfScope = true)
+  list()
   {
     listsize = 0;
     head = nullptr;
     tail = nullptr;
-    this->destroyDataWhenOutOfScope = destroyDataWhenOutOfScope;
   }
   ~list()
   {
-    clearList(destroyDataWhenOutOfScope);
+    if (destroyNode)
+      clearList(destroyData);
   }
 };
 
