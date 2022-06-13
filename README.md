@@ -80,6 +80,11 @@ int x = *track;// x = 99;
 intlist.remove(0, true) // remove node and data
 int x = *track; // x != 99;
 ```
+- use `.clearList` to remove all node and data from list.
+```cpp
+intlist.clearList(); // remove all nodes, and free nodes and data.
+intlist.clearList(false); // remove all nodes, but free only node.
+```
 ---
 ### 4. Exporting to Array
 To export to array
@@ -179,4 +184,8 @@ intlist.setEnd(true, true); // free node and data this is default
 intlist.setEnd(true, false); // free only node
 intlist.setEnd(false, true); // free only data
 intlist.setEnd(false, false); // free nothing, use carefully
+```
+- use `.size` to get number of elements in list.
+```cpp
+unsigned int sizeOfList = intlist.size();
 ```
