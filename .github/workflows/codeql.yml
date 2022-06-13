@@ -68,3 +68,5 @@ jobs:
 
     - name: Perform CodeQL Analysis (hello world)
       uses: github/codeql-action/analyze@v2
+      
+    - run: pio run -t uno
